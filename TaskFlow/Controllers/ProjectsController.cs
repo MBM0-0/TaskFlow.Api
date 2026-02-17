@@ -30,23 +30,23 @@ namespace TaskFlow.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateProject(CreateProjectRequest dto)
+        public async Task<IActionResult> CreateProject(ProjectRequest dto)
         {
             var result = await _service.CreateProjectAsync(dto);
-            return Ok(result);
+            return Created("", result);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateProject(UpdateProjectRequest dto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProject(int id, ProjectRequest dto)
         {
-            var result = await _service.UpdateProjectAsync(dto);
+            var result = await _service.UpdateProjectAsync(id, dto);
             return Ok(result);
         }
-        [HttpPut("Cancel")]
+        [HttpPatch("{id}/cancel")]
         public async Task<IActionResult> CancelProject(int id)
         {
             await _service.CancelProjectAsync(id);
-            return Ok(new { Message = $"The Booking With Id {id} Has Been Cancelled" });
+            return NoContent();
         }
     }
 }

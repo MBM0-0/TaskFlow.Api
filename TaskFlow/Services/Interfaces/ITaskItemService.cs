@@ -6,8 +6,8 @@ namespace TaskFlow.Services.Interfaces
     {
         Task<List<TaskItemListResponse>> GetAllTaskItemAsync();
         Task<TaskItemListResponse> GetTaskItemByIdAsync(int id);
-        Task<TaskItemListResponse> CreateTaskItemAsync(CreateTaskItemRequest dto);
-        Task<TaskItemListResponse> UpdateTaskItemAsync(UpdateTaskItemRequest dto);
+        Task<TaskItemListResponse> CreateTaskItemAsync(TaskItemRequest dto);
+        Task<TaskItemListResponse> UpdateTaskItemAsync(int id, TaskItemRequest dto);
         Task CancelTaskItemAsync(int id);
         Task DeleteTaskItemAsync(int id);
     }

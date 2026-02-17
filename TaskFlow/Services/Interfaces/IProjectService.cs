@@ -6,8 +6,8 @@ namespace TaskFlow.Services.Interfaces
     {
         Task<List<ProjectListResponse>> GetAllProjectAsync();
         Task<ProjectDetailsResponse> GetProjectByIdAsync(int id);
-        Task<ProjectDetailsResponse> CreateProjectAsync(CreateProjectRequest dto);
-        Task<ProjectDetailsResponse> UpdateProjectAsync(UpdateProjectRequest dto);
+        Task<ProjectDetailsResponse> CreateProjectAsync(ProjectRequest dto);
+        Task<ProjectDetailsResponse> UpdateProjectAsync(int id, ProjectRequest dto);
         Task CancelProjectAsync(int id);
 
     }

@@ -6,7 +6,7 @@ namespace TaskFlow.Controllers
 {
     [Route("api/[Controller]")]
     [ApiController]
-    public class TaskItemsController : Controller
+    public class TaskItemsController : ControllerBase
     {
         private readonly ITaskItemService _service;
 
@@ -30,29 +30,29 @@ namespace TaskFlow.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTaskItem(CreateTaskItemRequest dto)
+        public async Task<IActionResult> CreateTaskItem(TaskItemRequest dto)
         {
             var result = await _service.CreateTaskItemAsync(dto);
-            return Ok(result);
+            return Created("", result);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateTaskItem(UpdateTaskItemRequest dto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTaskItem(int id, TaskItemRequest dto)
         {
-            var result = await _service.UpdateTaskItemAsync(dto);
+            var result = await _service.UpdateTaskItemAsync(id, dto);
             return Ok(result);
         }
-        [HttpPut("Cancel/{id}")]
+        [HttpPatch("{id}/cancel")]
         public async Task<IActionResult> CancelTaskItem(int id)
         {
             await _service.CancelTaskItemAsync(id);
-            return Ok(new { Message = $"The Booking With Id {id} Has Been Cancelled" });
+            return NoContent();
         }
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTaskItem(int id)
         {
             await _service.DeleteTaskItemAsync(id);
-            return Ok();
+            return NoContent();
         }
     }
 }

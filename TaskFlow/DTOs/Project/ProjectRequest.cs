@@ -1,8 +1,7 @@
 ﻿namespace TaskFlow.DTOs.Project
 {
-    public class UpdateProjectRequest
+    public class ProjectRequest
     {
-        public int Id { get; set; }
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
     }

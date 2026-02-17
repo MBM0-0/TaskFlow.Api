@@ -10,6 +10,8 @@ namespace TaskFlow.Repositories.Interfaces
 
         Task AddAsync(Project entity);
 
+        Task<bool> IsNameFoundAsync(string name);
+
         Task SaveChangesAsync();
 
     }

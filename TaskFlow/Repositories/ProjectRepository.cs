@@ -29,6 +29,11 @@ namespace TaskFlow.Repositories
             await _dbcontext.Projects.AddAsync(entity);
         }
 
+        public async Task<bool> IsNameFoundAsync(string name)
+        {
+            return await _dbcontext.Projects.Where(x => x.DeletedAt == null).AnyAsync(x => x.Name == name);
+        }
+
         public async Task SaveChangesAsync()
         {
             await _dbcontext.SaveChangesAsync();

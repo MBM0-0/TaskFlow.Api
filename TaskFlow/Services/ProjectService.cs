@@ -1,5 +1,6 @@
 ﻿using Mapster;
 using TaskFlow.DTOs.Project;
+using TaskFlow.Middlewares.Exceptions;
 using TaskFlow.Models;
 using TaskFlow.Repositories.Interfaces;
 using TaskFlow.Services.Interfaces;
@@ -24,24 +25,47 @@ namespace TaskFlow.Services
         public async Task<ProjectDetailsResponse> GetProjectByIdAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
+            if (entity == null)
+            {
+                throw new NotFoundException("Project not found.");
+            }
             return entity.Adapt<ProjectDetailsResponse>();
         }
 
-        public async Task<ProjectDetailsResponse> CreateProjectAsync(CreateProjectRequest dto)
+        public async Task<ProjectDetailsResponse> CreateProjectAsync(ProjectRequest dto)
         {
             var entity = dto.Adapt<Project>();
+            if(string.IsNullOrWhiteSpace(dto.Name))
+            {
+                throw new ValidationException("Project name is required.");
+            }
+            if (await _repository.IsNameFoundAsync(dto.Name))
+            {
+                throw new ValidationException("A project with this name already exists.");
+            }
+
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
-            return entity.Adapt<ProjectDetailsResponse>();
+            return entity.Adapt<ProjectDetailsResponse>(); 
         }
 
-        public async Task<ProjectDetailsResponse> UpdateProjectAsync(UpdateProjectRequest dto)
+        public async Task<ProjectDetailsResponse> UpdateProjectAsync(int id,ProjectRequest dto)
         {
-            var entity = await _repository.GetByIdAsync(dto.Id);
-            entity.UpdatedAt = DateTime.UtcNow;
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null || entity.DeletedAt != null)
+            {
+                throw new NotFoundException("Project not foundor has been deleted..");
+            }
 
-            entity.Id = dto.Id;
-            entity.Name = dto.Name;
+            if (!string.IsNullOrWhiteSpace(dto.Name) && dto.Name != entity.Name)
+            {
+                if (await _repository.IsNameFoundAsync(dto.Name))
+                {
+                    throw new ValidationException("A project with this name already exists.");
+                }
+                entity.Name = dto.Name;
+            }
+
             entity.Description = dto.Description;
             entity.UpdatedAt = DateTime.UtcNow;
             await _repository.SaveChangesAsync();
@@ -51,6 +75,11 @@ namespace TaskFlow.Services
         public async Task CancelProjectAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);
+            if (entity == null || entity.DeletedAt != null)
+            {
+                throw new NotFoundException("Project not found or already canceled.");
+            }
+
             entity.DeletedAt = DateTime.UtcNow;
             await _repository.SaveChangesAsync();
         }

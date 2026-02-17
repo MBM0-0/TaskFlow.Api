@@ -1,8 +1,7 @@
 ﻿namespace TaskFlow.DTOs.TaskItem
 {
-    public class UpdateTaskItemRequest
+    public class TaskItemRequest
     {
-        public int Id { get; set; }
         public required string Title { get; set; }
         public string? Description { get; set; }
         public TaskStatus Status { get; set; }
