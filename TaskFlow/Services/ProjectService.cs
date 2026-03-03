@@ -32,17 +32,18 @@ namespace TaskFlow.Services
             return entity.Adapt<ProjectDetailsResponse>();
         }
 
-        public async Task<ProjectDetailsResponse> CreateProjectAsync(ProjectRequest dto)
+        public async Task<ProjectDetailsResponse> CreateProjectAsync(ProjectRequest dto, int userId)
         {
             var entity = dto.Adapt<Project>();
             if(string.IsNullOrWhiteSpace(dto.Name))
             {
-                throw new ValidationException("Project name is required.");
+                throw new BadRequestException("Project name is required.");
             }
             if (await _repository.IsNameFoundAsync(dto.Name))
             {
-                throw new ValidationException("A project with this name already exists.");
+                throw new BadRequestException("A project with this name already exists.");
             }
+            entity.CreatedByUserId = userId;
 
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
@@ -51,17 +52,13 @@ namespace TaskFlow.Services
 
         public async Task<ProjectDetailsResponse> UpdateProjectAsync(int id,ProjectRequest dto)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null || entity.DeletedAt != null)
-            {
-                throw new NotFoundException("Project not foundor has been deleted..");
-            }
+            var entity = await GetProjectByIdAsync(id);
 
             if (!string.IsNullOrWhiteSpace(dto.Name) && dto.Name != entity.Name)
             {
                 if (await _repository.IsNameFoundAsync(dto.Name))
                 {
-                    throw new ValidationException("A project with this name already exists.");
+                    throw new BadRequestException("A project with this name already exists.");
                 }
                 entity.Name = dto.Name;
             }

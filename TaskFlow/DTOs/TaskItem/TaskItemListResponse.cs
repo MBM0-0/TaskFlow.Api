@@ -6,6 +6,8 @@
         public required string Title { get; set; }
         public string? Description { get; set; }
         public TaskStatus Status { get; set; }
+        public int CreatedByUserId { get; set; }
+        public int AssignedToUserId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }

@@ -1,7 +1,9 @@
 ﻿using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using TaskFlow.DTOs.TaskItem;
 using TaskFlow.Middlewares.Exceptions;
 using TaskFlow.Models;
+using TaskFlow.Repositories;
 using TaskFlow.Repositories.Interfaces;
 using TaskFlow.Services.Interfaces;
 
@@ -10,10 +12,14 @@ namespace TaskFlow.Services
     public class TaskItemService : ITaskItemService
     {
         private readonly ITaskItemRepository _repository;
+        private readonly IUserService _userService;
+        private readonly IProjectService _projectService;
 
-        public TaskItemService(ITaskItemRepository repository)
+        public TaskItemService(ITaskItemRepository repository, IUserService userService, IProjectService projectService)
         {
             _repository = repository;
+            _userService = userService;
+            _projectService = projectService;
         }
 
         public async Task<List<TaskItemListResponse>> GetAllTaskItemAsync()
@@ -33,18 +39,22 @@ namespace TaskFlow.Services
             return entity.Adapt<TaskItemListResponse>();
         }
 
-        public async Task<TaskItemListResponse> CreateTaskItemAsync(TaskItemRequest dto)
+        public async Task<TaskItemListResponse> CreateTaskItemAsync(TaskItemRequest dto, int userId)
         {
             var entity = dto.Adapt<TaskItem>();
             if (string.IsNullOrWhiteSpace(dto.Title))
             {
-                throw new ValidationException("Task title is required.");
+                throw new BadRequestException("Task title is required.");
             }
             if (dto.Status < 0 || (int)dto.Status >= Enum.GetValues(typeof(TaskStatus)).Length)
             {
-                throw new ValidationException("Invalid task status.");
+                throw new BadRequestException("Invalid task status.");
             }
 
+            await _userService.GetUserByIdAsync(dto.AssignedToUserId);
+            await _projectService.GetProjectByIdAsync(dto.ProjectId);
+
+            entity.CreatedByUserId = userId;
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
             return entity.Adapt<TaskItemListResponse>();
@@ -52,11 +62,7 @@ namespace TaskFlow.Services
 
         public async Task<TaskItemListResponse> UpdateTaskItemAsync(int id, TaskItemRequest dto)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null)
-            {
-                throw new NotFoundException("There is No Task Item Found Whith This Id.");
-            }
+            var entity = await GetTaskItemByIdAsync(id);
 
             if (!string.IsNullOrWhiteSpace(dto.Title) && dto.Title != entity.Title)
             {
@@ -65,10 +71,20 @@ namespace TaskFlow.Services
 
             if (dto.Status < 0 || (int)dto.Status >= Enum.GetValues(typeof(TaskStatus)).Length)
             {
-                throw new ValidationException("Invalid task status.");
+                throw new BadRequestException("Invalid task status.");
             }
 
-            entity.Title = dto.Title;
+            if (dto.AssignedToUserId > 0 && dto.AssignedToUserId != entity.AssignedToUserId)
+            {
+                await _userService.GetUserByIdAsync(dto.AssignedToUserId);
+                entity.AssignedToUserId = dto.AssignedToUserId;
+            }
+            if (dto.ProjectId > 0 && dto.ProjectId != entity.ProjectId)
+            {
+                await _projectService.GetProjectByIdAsync(dto.ProjectId);
+                entity.ProjectId = dto.ProjectId;
+            }
+
             entity.Description = dto.Description;
             entity.Status = dto.Status;
             entity.UpdatedAt = DateTime.UtcNow;
@@ -78,15 +94,12 @@ namespace TaskFlow.Services
 
         public async Task CancelTaskItemAsync(int id)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null || entity.DeletedAt != null)
-            {
-                throw new NotFoundException("Task item not found or Its already Canceld.");
-            }
+            var entity = await GetTaskItemByIdAsync(id);
 
             entity.DeletedAt = DateTime.UtcNow;
             await _repository.SaveChangesAsync();
         }
+
         public async Task DeleteTaskItemAsync(int id)
         {
             var entity = await _repository.GetByIdAsync(id);

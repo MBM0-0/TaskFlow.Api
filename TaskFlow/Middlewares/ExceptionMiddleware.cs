@@ -27,33 +27,35 @@ namespace TaskFlow.Middlewares
 
         private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            HttpStatusCode status;
+            int statusCode;
             string message = exception.Message;
 
             switch (exception)
             {
                 case NotFoundException:
-                    status = HttpStatusCode.NotFound;
+                    statusCode = StatusCodes.Status404NotFound;
                     break;
-                case TaskFlow.Middlewares.Exceptions.ValidationException:
-                    status = HttpStatusCode.BadRequest;
+                case TaskFlow.Middlewares.Exceptions.BadRequestException:
+                    statusCode = StatusCodes.Status400BadRequest;
                     break;
-                case UnauthorizedException:
-                    status = HttpStatusCode.Unauthorized;
+                case TaskFlow.Middlewares.Exceptions.UnauthorizedException:
+                    statusCode = StatusCodes.Status401Unauthorized;
+                    break;
+                case ForbiddenException:
+                    statusCode = StatusCodes.Status403Forbidden;
                     break;
                 default:
-                    status = HttpStatusCode.InternalServerError;
+                    statusCode = StatusCodes.Status500InternalServerError;
                     message = "Internal Server Error";
                     break;
             }
 
-            var response = new { StatusCode = (int)status, Message = message };
-            var payload = JsonSerializer.Serialize(response);
+            var response = new { statusCode = statusCode, message = message };
 
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)status;
+            context.Response.StatusCode = statusCode;
 
-            return context.Response.WriteAsync(payload);
+            return context.Response.WriteAsJsonAsync(response);
         }
     }
 }

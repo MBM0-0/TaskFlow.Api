@@ -10,6 +10,12 @@
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
 
+        public int CreatedByUserId { get; set; }
+        public User CreatedBy { get; set; } = null!;
+
+        public int? AssignedToUserId { get; set; }
+        public User? AssignedTo { get; set; }
+
         public int ProjectId { get; set; }
         public Project Project { get; set; } = null!;
     }
