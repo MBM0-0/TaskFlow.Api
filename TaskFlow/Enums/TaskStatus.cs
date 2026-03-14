@@ -1,6 +1,6 @@
 ﻿namespace TaskFlow.Enums
 {
-    public enum TaskStatus
+    public enum TaskItemStatus
     {
         Open = 0,
         InProgress = 1,

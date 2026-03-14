@@ -1,5 +1,7 @@
 ﻿using Mapster;
+using TaskFlow.DTOs.Pagination;
 using TaskFlow.DTOs.Project;
+using TaskFlow.DTOs.TaskItem;
 using TaskFlow.Middlewares.Exceptions;
 using TaskFlow.Models;
 using TaskFlow.Repositories.Interfaces;
@@ -16,10 +18,18 @@ namespace TaskFlow.Services
             _repository = repository;
         }
 
-        public async Task<List<ProjectListResponse>> GetAllProjectAsync()
+        public async Task<PagedResponse<ProjectListResponse>> GetPagedProjectsAsync(ProjectFilterRequest filter)
         {
-            var entity = await _repository.GetAllAsync();
-            return entity.Adapt<List<ProjectListResponse>>();
+            var (projects, TotalCount) = await _repository.GetPagedAsync(filter);
+
+            return new PagedResponse<ProjectListResponse>
+            {
+                Items = projects.Adapt<List<ProjectListResponse>>(),
+                Page = filter.Page,
+                PageSize = filter.PageSize,
+                TotalCount = TotalCount
+            };
+
         }
 
         public async Task<ProjectDetailsResponse> GetProjectByIdAsync(int id)
@@ -52,7 +62,11 @@ namespace TaskFlow.Services
 
         public async Task<ProjectDetailsResponse> UpdateProjectAsync(int id,ProjectRequest dto)
         {
-            var entity = await GetProjectByIdAsync(id);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null)
+            {
+                throw new NotFoundException("Project not found.");
+            }
 
             if (!string.IsNullOrWhiteSpace(dto.Name) && dto.Name != entity.Name)
             {

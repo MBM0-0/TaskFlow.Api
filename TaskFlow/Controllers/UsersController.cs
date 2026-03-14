@@ -20,9 +20,9 @@ namespace TaskFlow.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetUsers([FromQuery] UserFilterRequest filter)
         {
-            var result = await _service.GetAllUserAsync();
+            var result = await _service.GetPagedUsersAsync(filter);
             return Ok(result);
         }
 

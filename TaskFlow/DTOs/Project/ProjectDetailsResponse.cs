@@ -12,6 +12,6 @@ namespace TaskFlow.DTOs.Project
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
 
-        public List<TaskItemListResponse> TaskItems { get; set; }
+        public List<TaskItemListResponse> TaskItems { get; set; } = new();
     }
 }

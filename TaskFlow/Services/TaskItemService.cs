@@ -1,9 +1,9 @@
 ﻿using Mapster;
-using Microsoft.AspNetCore.Authorization;
+using TaskFlow.DTOs.Pagination;
 using TaskFlow.DTOs.TaskItem;
+using TaskFlow.Enums;
 using TaskFlow.Middlewares.Exceptions;
 using TaskFlow.Models;
-using TaskFlow.Repositories;
 using TaskFlow.Repositories.Interfaces;
 using TaskFlow.Services.Interfaces;
 
@@ -22,10 +22,17 @@ namespace TaskFlow.Services
             _projectService = projectService;
         }
 
-        public async Task<List<TaskItemListResponse>> GetAllTaskItemAsync()
+        public async Task<PagedResponse<TaskItemListResponse>> GetPagedTaskItemsAsync(TaskItemFilterRequest filter)
         {
-            var entity = await _repository.GetAllAsync();
-            return entity.Adapt<List<TaskItemListResponse>>();
+            var (TaskItem, TotalCount) = await _repository.GetPagedAsync(filter);
+
+            return new PagedResponse<TaskItemListResponse>
+            {
+                Items = TaskItem.Adapt<List<TaskItemListResponse>>(),
+                Page = filter.Page,
+                PageSize = filter.PageSize,
+                TotalCount = TotalCount
+            };
         }
 
         public async Task<TaskItemListResponse> GetTaskItemByIdAsync(int id)
@@ -46,7 +53,7 @@ namespace TaskFlow.Services
             {
                 throw new BadRequestException("Task title is required.");
             }
-            if (dto.Status < 0 || (int)dto.Status >= Enum.GetValues(typeof(TaskStatus)).Length)
+            if (dto.Status < 0 || (int)dto.Status >= Enum.GetValues(typeof(TaskItemStatus)).Length)
             {
                 throw new BadRequestException("Invalid task status.");
             }
@@ -62,14 +69,18 @@ namespace TaskFlow.Services
 
         public async Task<TaskItemListResponse> UpdateTaskItemAsync(int id, TaskItemRequest dto)
         {
-            var entity = await GetTaskItemByIdAsync(id);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null)
+            {
+                throw new NotFoundException("Task item not found.");
+            }
 
             if (!string.IsNullOrWhiteSpace(dto.Title) && dto.Title != entity.Title)
             {
                 entity.Title = dto.Title;
             }
 
-            if (dto.Status < 0 || (int)dto.Status >= Enum.GetValues(typeof(TaskStatus)).Length)
+            if (dto.Status < 0 || (int)dto.Status >= Enum.GetValues(typeof(TaskItemStatus)).Length)
             {
                 throw new BadRequestException("Invalid task status.");
             }
@@ -94,7 +105,11 @@ namespace TaskFlow.Services
 
         public async Task CancelTaskItemAsync(int id)
         {
-            var entity = await GetTaskItemByIdAsync(id);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null || entity.DeletedAt != null)
+            {
+                throw new NotFoundException("Task item not found or already canceled..");
+            }
 
             entity.DeletedAt = DateTime.UtcNow;
             await _repository.SaveChangesAsync();

@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskFlow.Data;
+using TaskFlow.DTOs.Project;
 using TaskFlow.Models;
 using TaskFlow.Repositories.Interfaces;
+using static System.Net.WebRequestMethods;
 
 namespace TaskFlow.Repositories
 {
@@ -14,9 +16,34 @@ namespace TaskFlow.Repositories
             _dbcontext = dbcontext;
         }
 
-        public async Task<List<Project>> GetAllAsync()
+        public async Task<(List<Project> projects, int totalCount)> GetPagedAsync(ProjectFilterRequest filter)
         {
-            return await _dbcontext.Projects.Include(p => p.TaskItems.Where(t => t.DeletedAt == null)).Where(r => r.DeletedAt == null).ToListAsync();
+            IQueryable<Project> projectQuery = _dbcontext.Projects.Include(p => p.TaskItems);
+
+            if (filter.DeletedAt.HasValue)
+            {
+                projectQuery = filter.DeletedAt.Value
+                  ? projectQuery.Where(x => x.DeletedAt != null)
+                  : projectQuery.Where(x => x.DeletedAt == null);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+            {
+                projectQuery = projectQuery.Where(x => x.Name.Contains(filter.Name));
+            }
+
+            if (filter.CreatedByUserId.HasValue)
+            {
+                projectQuery = projectQuery.Where(x => x.CreatedByUserId == filter.CreatedByUserId);
+            }
+
+            projectQuery = filter.SortDesc ? projectQuery.OrderByDescending(x => x.CreatedAt) : projectQuery.OrderBy(x => x.CreatedAt);
+
+            var totalCount = await projectQuery.CountAsync();
+
+            var pagedProjects = await projectQuery.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync();
+
+            return (pagedProjects, totalCount);
         }
 
         public async Task<Project> GetByIdAsync(int id)

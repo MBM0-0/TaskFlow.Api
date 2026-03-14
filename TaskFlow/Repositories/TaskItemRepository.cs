@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskFlow.Data;
+using TaskFlow.DTOs.TaskItem;
 using TaskFlow.Models;
 using TaskFlow.Repositories.Interfaces;
+using static System.Net.WebRequestMethods;
 
 namespace TaskFlow.Repositories
 {
@@ -14,9 +16,44 @@ namespace TaskFlow.Repositories
             _dbcontext = dbcontext;
         }
 
-        public async Task<List<TaskItem>> GetAllAsync()
+        public async Task<( List<TaskItem> TaskItems, int totalCount)> GetPagedAsync(TaskItemFilterRequest filter)
         {
-            return await _dbcontext.TaskItems.Where(r => r.DeletedAt == null).ToListAsync();
+            IQueryable<TaskItem> taskItemQuery = _dbcontext.TaskItems;
+
+            if (filter.DeletedAt.HasValue)
+            {
+                taskItemQuery = filter.DeletedAt.Value
+                  ? taskItemQuery.Where(x => x.DeletedAt != null)
+                  : taskItemQuery.Where(x => x.DeletedAt == null);
+            }
+
+            if (filter.Status.HasValue && Enum.IsDefined(typeof(TaskStatus), filter.Status.Value))
+            {
+                taskItemQuery = taskItemQuery.Where(x => x.Status == filter.Status.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Title))
+            {
+                taskItemQuery = taskItemQuery.Where(x => x.Title.Contains(filter.Title));
+            }
+
+            if (filter.CreatedByUserId.HasValue)
+            {
+                taskItemQuery = taskItemQuery.Where(x => x.CreatedByUserId == filter.CreatedByUserId);
+            }
+
+            if (filter.AssignedToUserId.HasValue)
+            {
+                taskItemQuery = taskItemQuery.Where(x => x.AssignedToUserId == filter.AssignedToUserId);
+            }
+
+            taskItemQuery = filter.SortDesc ? taskItemQuery.OrderByDescending(x => x.CreatedAt) : taskItemQuery.OrderBy(x => x.CreatedAt);
+
+            var totalCount = await taskItemQuery.CountAsync();
+
+            var pagedTaskItems = await taskItemQuery.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync();
+
+            return (pagedTaskItems, totalCount);
         }
 
         public async Task<TaskItem> GetByIdAsync(int id)

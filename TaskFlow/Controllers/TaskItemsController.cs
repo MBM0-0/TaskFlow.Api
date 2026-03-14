@@ -19,9 +19,9 @@ namespace TaskFlow.Controllers
 
         [Authorize(Roles = "Admin,User")]
         [HttpGet]
-        public async Task<IActionResult> GetAllTaskItem()
+        public async Task<IActionResult> GetTaskItem([FromQuery] TaskItemFilterRequest filter)
         {
-            var result = await _service.GetAllTaskItemAsync();
+            var result = await _service.GetPagedTaskItemsAsync(filter);
             return Ok(result);
         }
 

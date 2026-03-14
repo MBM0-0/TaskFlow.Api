@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -6,6 +7,9 @@ using System.Security.Claims;
 using System.Text;
 using TaskFlow.Data;
 using TaskFlow.DTOs.Auth;
+using TaskFlow.DTOs.Pagination;
+using TaskFlow.DTOs.User;
+using TaskFlow.Models;
 using TaskFlow.Repositories;
 using TaskFlow.Repositories.Interfaces;
 using TaskFlow.Services;

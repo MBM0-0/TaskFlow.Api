@@ -20,9 +20,9 @@ namespace TaskFlow.Controllers
 
         [Authorize(Roles = "Admin,User")]
         [HttpGet]
-        public async Task<IActionResult> GetAllProjects()
+        public async Task<IActionResult> GetProjects([FromQuery] ProjectFilterRequest filter)
         {
-            var result = await _service.GetAllProjectAsync();
+            var result = await _service.GetPagedProjectsAsync(filter);
             return Ok(result);
         }
 
