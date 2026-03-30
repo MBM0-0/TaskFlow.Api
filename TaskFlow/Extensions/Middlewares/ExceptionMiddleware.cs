@@ -1,8 +1,8 @@
 ﻿using System.Net;
 using System.Text.Json;
-using TaskFlow.Middlewares.Exceptions;
+using TaskFlow.Extensions.Middlewares.Exceptions;
 
-namespace TaskFlow.Middlewares
+namespace TaskFlow.Extensions.Middlewares
 {
     public class ExceptionMiddleware
     {
@@ -35,10 +35,10 @@ namespace TaskFlow.Middlewares
                 case NotFoundException:
                     statusCode = StatusCodes.Status404NotFound;
                     break;
-                case TaskFlow.Middlewares.Exceptions.BadRequestException:
+                case BadRequestException:
                     statusCode = StatusCodes.Status400BadRequest;
                     break;
-                case TaskFlow.Middlewares.Exceptions.UnauthorizedException:
+                case UnauthorizedException:
                     statusCode = StatusCodes.Status401Unauthorized;
                     break;
                 case ForbiddenException:

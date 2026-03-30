@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using TaskFlow.Models;
 
 namespace TaskFlow.Data
@@ -15,9 +16,9 @@ namespace TaskFlow.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
-            modelBuilder.Entity<Role>().HasData(
-              new Role { Id = 1, Name = "Admin" },
-              new Role { Id = 2, Name = "User" });
+            //modelBuilder.Entity<Role>().HasData(
+            //  new Role { Id = 1, Name = "Admin" },
+            //  new Role { Id = 2, Name = "User" });
 
             modelBuilder.Entity<TaskItem>()
                 .HasOne(t => t.Project)

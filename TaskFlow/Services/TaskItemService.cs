@@ -2,7 +2,7 @@
 using TaskFlow.DTOs.Pagination;
 using TaskFlow.DTOs.TaskItem;
 using TaskFlow.Enums;
-using TaskFlow.Middlewares.Exceptions;
+using TaskFlow.Extensions.Middlewares.Exceptions;
 using TaskFlow.Models;
 using TaskFlow.Repositories.Interfaces;
 using TaskFlow.Services.Interfaces;

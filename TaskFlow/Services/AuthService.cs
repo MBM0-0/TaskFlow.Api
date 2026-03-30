@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using TaskFlow.Data;
 using TaskFlow.DTOs.Auth;
-using TaskFlow.Middlewares.Exceptions;
+using TaskFlow.Extensions.Middlewares.Exceptions;
 using TaskFlow.Models;
 using TaskFlow.Services.Interfaces;
 
@@ -15,6 +16,7 @@ namespace TaskFlow.Services
     {
         private readonly JwtOptions _jwtOptions;
         private readonly AppDbContext _dbcontext;
+        private readonly PasswordHasher<User> _passwordHasher = new();
 
         public AuthService(JwtOptions jwtOptions, AppDbContext dbcontext)
         {
@@ -24,9 +26,14 @@ namespace TaskFlow.Services
 
         public async Task<AuthenticationResponse> LoginAsync(AuthenticationRequest request)
         {
-            var user = await _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserName == request.Username && u.PasswordHash == request.Password);
-
+            var user = await _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserName == request.Username);
             if (user == null)
+            {
+                throw new UnauthorizedException("Invalid username or password");
+            }
+
+            var result = _passwordHasher.VerifyHashedPassword(user,user.PasswordHash,request.Password);
+            if (result == PasswordVerificationResult.Failed)
             {
                 throw new UnauthorizedException("Invalid username or password");
             }

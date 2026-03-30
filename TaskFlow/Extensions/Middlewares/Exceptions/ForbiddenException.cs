@@ -1,4 +1,4 @@
-﻿namespace TaskFlow.Middlewares.Exceptions
+﻿namespace TaskFlow.Extensions.Middlewares.Exceptions
 {
     public class ForbiddenException : Exception
     {

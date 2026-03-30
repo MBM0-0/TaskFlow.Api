@@ -1,10 +1,11 @@
 ﻿using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.DTOs.Pagination;
 using TaskFlow.DTOs.Project;
 using TaskFlow.DTOs.TaskItem;
 using TaskFlow.DTOs.User;
-using TaskFlow.Middlewares.Exceptions;
+using TaskFlow.Extensions.Middlewares.Exceptions;
 using TaskFlow.Models;
 using TaskFlow.Repositories.Interfaces;
 using TaskFlow.Services.Interfaces;
@@ -15,6 +16,7 @@ namespace TaskFlow.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _repository;
+        private readonly PasswordHasher<User> _passwordHasher = new();
 
         public UserService(IUserRepository repository)
         {
@@ -70,6 +72,8 @@ namespace TaskFlow.Services
                 throw new BadRequestException($"RoleId {dto.RoleId} does not exist.");
             }
 
+            entity.PasswordHash = _passwordHasher.HashPassword(entity, dto.PasswordHash);
+
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
             return entity.Adapt<UserDetailsResponse>();
@@ -96,9 +100,13 @@ namespace TaskFlow.Services
                 throw new BadRequestException($"RoleId {dto.RoleId} does not exist.");
             }
 
+            if (!string.IsNullOrWhiteSpace(dto.PasswordHash))
+            {
+                entity.PasswordHash = _passwordHasher.HashPassword(entity, dto.PasswordHash);
+            }
+
             entity.FullName = dto.FullName;
             entity.Email = dto.Email;
-            entity.PasswordHash = dto.PasswordHash;
             entity.UpdatedAt = DateTime.UtcNow;
             await _repository.SaveChangesAsync();
             return entity.Adapt<UserDetailsResponse>();
