@@ -14,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder
 builder.Services.AddAuthorization();
 builder.Services.AddTaskFlowJwt(builder.Configuration);
 builder.Services.AddTaskFlowSwagger();
+builder.Services.AddTaskFlowRateLimiter();
 
 var app = builder.Build();
 
@@ -33,6 +34,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRateLimiter();
 
 app.UseMiddleware<ExceptionMiddleware>();
 

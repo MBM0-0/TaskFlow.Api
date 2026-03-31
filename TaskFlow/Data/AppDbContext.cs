@@ -12,13 +12,10 @@ namespace TaskFlow.Data
         public DbSet<TaskItem> TaskItems { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
-            //modelBuilder.Entity<Role>().HasData(
-            //  new Role { Id = 1, Name = "Admin" },
-            //  new Role { Id = 2, Name = "User" });
 
             modelBuilder.Entity<TaskItem>()
                 .HasOne(t => t.Project)
