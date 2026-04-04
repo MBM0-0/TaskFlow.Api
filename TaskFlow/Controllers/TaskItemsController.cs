@@ -46,7 +46,8 @@ namespace TaskFlow.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTaskItem(int id, TaskItemRequest dto)
         {
-            var result = await _service.UpdateTaskItemAsync(id, dto);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _service.UpdateTaskItemAsync(id, dto, userId);
             return Ok(result);
         }
 
@@ -54,7 +55,8 @@ namespace TaskFlow.Controllers
         [HttpPatch("{id}/cancel")]
         public async Task<IActionResult> CancelTaskItem(int id)
         {
-            await _service.CancelTaskItemAsync(id);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _service.CancelTaskItemAsync(id, userId);
             return NoContent();
         }
 
@@ -62,7 +64,8 @@ namespace TaskFlow.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTaskItem(int id)
         {
-            await _service.DeleteTaskItemAsync(id);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _service.DeleteTaskItemAsync(id, userId);
             return NoContent();
         }
     }

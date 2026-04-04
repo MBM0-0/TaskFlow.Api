@@ -3,10 +3,13 @@ using TaskFlow;
 using TaskFlow.Data;
 using TaskFlow.Extensions;
 using TaskFlow.Extensions.Middlewares;
+using Serilog;
 
+Log.Logger = new LoggerConfiguration().MinimumLevel.Warning().WriteTo.File("Logs/TaskFlow-Log.txt", rollingInterval: RollingInterval.Day).CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog();
 builder.Services.AddTaskFlowServices();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

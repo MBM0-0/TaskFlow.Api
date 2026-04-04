@@ -16,6 +16,7 @@ namespace TaskFlow.Extensions
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<AuditService>();
         }
     }
 }

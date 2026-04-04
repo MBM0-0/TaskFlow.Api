@@ -1,5 +1,6 @@
 ﻿using TaskFlow.DTOs.Pagination;
 using TaskFlow.DTOs.User;
+using TaskFlow.Models;
 
 namespace TaskFlow.Services.Interfaces
 {
@@ -7,8 +8,8 @@ namespace TaskFlow.Services.Interfaces
     {
         Task<PagedResponse<UserListResponse>> GetPagedUsersAsync(UserFilterRequest filter);
         Task<UserDetailsResponse> GetUserByIdAsync(int id);
-        Task<UserDetailsResponse> CreateUserAsync(UserRequest dto);
-        Task<UserDetailsResponse> UpdateUserAsync(int id, UserRequest dto);
-        Task CancelUserAsync(int id);
+        Task<UserDetailsResponse> CreateUserAsync(UserRequest dto, int userId);
+        Task<UserDetailsResponse> UpdateUserAsync(int id, UserRequest dto, int userId);
+        Task CancelUserAsync(int id, int userId);
     }
 }

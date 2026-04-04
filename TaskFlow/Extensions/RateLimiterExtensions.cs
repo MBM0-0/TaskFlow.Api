@@ -1,4 +1,5 @@
-﻿using System.Threading.RateLimiting;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 
 namespace TaskFlow.Extensions
 {
@@ -9,6 +10,15 @@ namespace TaskFlow.Extensions
             services.AddRateLimiter(options =>
             {
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                options.OnRejected = async (context, token) =>
+                 {
+                     var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("RateLimitLogger");
+                     var ip = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                     logger.LogWarning($"Rate limit exceeded by IP: {ip}");
+
+                     await context.HttpContext.Response.WriteAsync("Too many requests. Try again later.");
+                 };
 
                 options.AddPolicy("AuthPolicy", context =>
                 {

@@ -17,10 +17,12 @@ namespace TaskFlow.Services
     {
         private readonly IUserRepository _repository;
         private readonly PasswordHasher<User> _passwordHasher = new();
+        private readonly AuditService _auditService;
 
-        public UserService(IUserRepository repository)
+        public UserService(IUserRepository repository, AuditService auditService)
         {
             _repository = repository;
+            _auditService = auditService;
         }
 
         public async Task<PagedResponse<UserListResponse>> GetPagedUsersAsync(UserFilterRequest filter)
@@ -46,7 +48,7 @@ namespace TaskFlow.Services
             return entity.Adapt<UserDetailsResponse>();
         }
 
-        public async Task<UserDetailsResponse> CreateUserAsync(UserRequest dto)
+        public async Task<UserDetailsResponse> CreateUserAsync(UserRequest dto, int userId)
         {
             var entity = dto.Adapt<User>();
             if (string.IsNullOrWhiteSpace(dto.UserName))
@@ -76,10 +78,13 @@ namespace TaskFlow.Services
 
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
+            await _auditService.LogAsync(userId, "Create", "User", entity.Id);
+            await _repository.SaveChangesAsync();
+
             return entity.Adapt<UserDetailsResponse>();
         }
 
-        public async Task<UserDetailsResponse> UpdateUserAsync(int id, UserRequest dto)
+        public async Task<UserDetailsResponse> UpdateUserAsync(int id, UserRequest dto, int userId)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null || entity.DisabledAt != null)
@@ -108,11 +113,12 @@ namespace TaskFlow.Services
             entity.FullName = dto.FullName;
             entity.Email = dto.Email;
             entity.UpdatedAt = DateTime.UtcNow;
+            await _auditService.LogAsync(userId, "Update", "User", id);
             await _repository.SaveChangesAsync();
             return entity.Adapt<UserDetailsResponse>();
         }
 
-        public async Task CancelUserAsync(int id)
+        public async Task CancelUserAsync(int id, int userId)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null || entity.DisabledAt != null)
@@ -121,6 +127,7 @@ namespace TaskFlow.Services
             }
 
             entity.DisabledAt = DateTime.UtcNow;
+            await _auditService.LogAsync(userId, "Cancel", "User", id);
             await _repository.SaveChangesAsync();
         }
     }

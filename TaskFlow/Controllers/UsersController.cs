@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TaskFlow.DTOs.User;
 using TaskFlow.Services.Interfaces;
 
@@ -36,20 +37,23 @@ namespace TaskFlow.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser(UserRequest dto)
         {
-            var result = await _service.CreateUserAsync(dto);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _service.CreateUserAsync(dto, userId);
             return Created("", result);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, UserRequest dto)
         {
-            var result = await _service.UpdateUserAsync(id, dto);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _service.UpdateUserAsync(id, dto, userId);
             return Ok(result);
         }
         [HttpPatch("{id}/cancel")]
         public async Task<IActionResult> CancelUser(int id)
         {
-            await _service.CancelUserAsync(id);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _service.CancelUserAsync(id, userId);
             return NoContent();
         }
     }

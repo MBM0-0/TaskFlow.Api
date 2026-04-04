@@ -9,8 +9,8 @@ namespace TaskFlow.Services.Interfaces
         Task<PagedResponse<ProjectListResponse>> GetPagedProjectsAsync(ProjectFilterRequest filter);
         Task<ProjectDetailsResponse> GetProjectByIdAsync(int id);
         Task<ProjectDetailsResponse> CreateProjectAsync(ProjectRequest dto, int userId);
-        Task<ProjectDetailsResponse> UpdateProjectAsync(int id, ProjectRequest dto);
-        Task CancelProjectAsync(int id);
+        Task<ProjectDetailsResponse> UpdateProjectAsync(int id, ProjectRequest dto, int userId);
+        Task CancelProjectAsync(int id, int userId);
 
     }
 }

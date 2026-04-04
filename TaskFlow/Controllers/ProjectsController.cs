@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TaskFlow.DTOs.Project;
+using TaskFlow.Models;
 using TaskFlow.Services.Interfaces;
 
 namespace TaskFlow.Controllers
@@ -47,7 +48,8 @@ namespace TaskFlow.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProject(int id, ProjectRequest dto)
         {
-            var result = await _service.UpdateProjectAsync(id, dto);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _service.UpdateProjectAsync(id, dto, userId);
             return Ok(result);
         }
 
@@ -55,7 +57,8 @@ namespace TaskFlow.Controllers
         [HttpPatch("{id}/cancel")]
         public async Task<IActionResult> CancelProject(int id)
         {
-            await _service.CancelProjectAsync(id);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _service.CancelProjectAsync(id, userId);
             return NoContent();
         }
     }

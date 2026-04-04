@@ -14,12 +14,15 @@ namespace TaskFlow.Services
         private readonly ITaskItemRepository _repository;
         private readonly IUserService _userService;
         private readonly IProjectService _projectService;
+        private readonly AuditService _auditService;
 
-        public TaskItemService(ITaskItemRepository repository, IUserService userService, IProjectService projectService)
+
+        public TaskItemService(ITaskItemRepository repository, IUserService userService, IProjectService projectService, AuditService auditService)
         {
             _repository = repository;
             _userService = userService;
             _projectService = projectService;
+            _auditService = auditService;
         }
 
         public async Task<PagedResponse<TaskItemListResponse>> GetPagedTaskItemsAsync(TaskItemFilterRequest filter)
@@ -64,10 +67,13 @@ namespace TaskFlow.Services
             entity.CreatedByUserId = userId;
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
+            await _auditService.LogAsync(userId, "Create", "TaskItem", entity.Id);
+            await _repository.SaveChangesAsync();
+
             return entity.Adapt<TaskItemListResponse>();
         }
 
-        public async Task<TaskItemListResponse> UpdateTaskItemAsync(int id, TaskItemRequest dto)
+        public async Task<TaskItemListResponse> UpdateTaskItemAsync(int id, TaskItemRequest dto, int userId)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
@@ -99,11 +105,13 @@ namespace TaskFlow.Services
             entity.Description = dto.Description;
             entity.Status = dto.Status;
             entity.UpdatedAt = DateTime.UtcNow;
+
+            await _auditService.LogAsync(userId, "Update", "TaskItem", entity.Id);
             await _repository.SaveChangesAsync();
             return entity.Adapt<TaskItemListResponse>();
         }
 
-        public async Task CancelTaskItemAsync(int id)
+        public async Task CancelTaskItemAsync(int id, int userId)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null || entity.DeletedAt != null)
@@ -112,10 +120,11 @@ namespace TaskFlow.Services
             }
 
             entity.DeletedAt = DateTime.UtcNow;
+            await _auditService.LogAsync(userId, "Cancel", "TaskItem", entity.Id);
             await _repository.SaveChangesAsync();
         }
 
-        public async Task DeleteTaskItemAsync(int id)
+        public async Task DeleteTaskItemAsync(int id, int userId)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
@@ -124,6 +133,7 @@ namespace TaskFlow.Services
             }
 
             await _repository.DeleteAsync(entity);
+            await _auditService.LogAsync(userId, "Delete", "TaskItem", entity.Id);
             await _repository.SaveChangesAsync();
         }
     }

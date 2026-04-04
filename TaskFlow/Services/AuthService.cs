@@ -18,11 +18,14 @@ namespace TaskFlow.Services
         private readonly JwtOptions _jwtOptions;
         private readonly AppDbContext _dbcontext;
         private readonly PasswordHasher<User> _passwordHasher = new();
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(JwtOptions jwtOptions, AppDbContext dbcontext)
+
+        public AuthService(JwtOptions jwtOptions, AppDbContext dbcontext, ILogger<AuthService> logger)
         {
             _jwtOptions = jwtOptions;
             _dbcontext = dbcontext;
+            _logger = logger;
         }
 
         public async Task<AuthenticationResponse> LoginAsync(AuthenticationRequest request)
@@ -75,7 +78,7 @@ namespace TaskFlow.Services
             });
 
             await _dbcontext.SaveChangesAsync();
-
+            _logger.LogInformation("User {UserId} logged in successfully", user.Id);
             return new AuthenticationResponse
             {
                 AccessToken = jwt,
@@ -92,6 +95,7 @@ namespace TaskFlow.Services
 
             if (storedToken == null || storedToken.IsRevoked || storedToken.ExpiryDate <= DateTime.UtcNow)
             {
+                _logger.LogWarning("Invalid refresh token used");
                 throw new UnauthorizedException("Invalid refresh token");
             }
 

@@ -9,8 +9,8 @@ namespace TaskFlow.Services.Interfaces
         Task<PagedResponse<TaskItemListResponse>> GetPagedTaskItemsAsync(TaskItemFilterRequest filter);
         Task<TaskItemListResponse> GetTaskItemByIdAsync(int id);
         Task<TaskItemListResponse> CreateTaskItemAsync(TaskItemRequest dto, int userId);
-        Task<TaskItemListResponse> UpdateTaskItemAsync(int id, TaskItemRequest dto);
-        Task CancelTaskItemAsync(int id);
-        Task DeleteTaskItemAsync(int id);
+        Task<TaskItemListResponse> UpdateTaskItemAsync(int id, TaskItemRequest dto, int userId);
+        Task CancelTaskItemAsync(int id, int userId);
+        Task DeleteTaskItemAsync(int id, int userId);
     }
 }

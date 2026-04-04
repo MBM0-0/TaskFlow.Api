@@ -12,10 +12,13 @@ namespace TaskFlow.Services
     public class ProjectService : IProjectService
     {
         private readonly IProjectRepository _repository;
+        private readonly AuditService _auditService;
 
-        public ProjectService(IProjectRepository repository)
+
+        public ProjectService(IProjectRepository repository, AuditService auditService)
         {
             _repository = repository;
+            _auditService = auditService;
         }
 
         public async Task<PagedResponse<ProjectListResponse>> GetPagedProjectsAsync(ProjectFilterRequest filter)
@@ -57,10 +60,13 @@ namespace TaskFlow.Services
 
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
+            await _auditService.LogAsync(userId, "Create", "Project", entity.Id);
+            await _repository.SaveChangesAsync();
+
             return entity.Adapt<ProjectDetailsResponse>(); 
         }
 
-        public async Task<ProjectDetailsResponse> UpdateProjectAsync(int id,ProjectRequest dto)
+        public async Task<ProjectDetailsResponse> UpdateProjectAsync(int id,ProjectRequest dto, int userId)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
@@ -79,11 +85,13 @@ namespace TaskFlow.Services
 
             entity.Description = dto.Description;
             entity.UpdatedAt = DateTime.UtcNow;
+
+            await _auditService.LogAsync(userId, "Update", "Project", entity.Id);
             await _repository.SaveChangesAsync();
             return entity.Adapt<ProjectDetailsResponse>();
         }
 
-        public async Task CancelProjectAsync(int id)
+        public async Task CancelProjectAsync(int id, int userId)
         {
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null || entity.DeletedAt != null)
@@ -92,6 +100,7 @@ namespace TaskFlow.Services
             }
 
             entity.DeletedAt = DateTime.UtcNow;
+            await _auditService.LogAsync(userId, "Cancel", "Project", entity.Id);
             await _repository.SaveChangesAsync();
         }
     }
